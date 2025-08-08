@@ -1,59 +1,119 @@
-import { categories } from "../data/categories";
+import { categories, sedes, paymentMethods } from "../data/categories";
 import { formatDate } from "../helpers/formatDate";
+import { formatString } from "../helpers/formatString";
 import type { TReservation } from "../types";
-import { useMemo } from "react";
+import { FaUser, FaCalendarAlt, FaUsers, FaMapMarkerAlt, FaRegCreditCard, FaRegStickyNote, FaTrashAlt, FaRegTimesCircle } from "react-icons/fa";
+import { HiPencilAlt } from "react-icons/hi";
+import type { Dispatch } from "react";
+import type { ReservationActions, ReservationState } from "../reducers/reservation-reducer";
 
 type TReservationListProps = {
-  state: TReservation[]
+  state: TReservation[],
+  reservationState: ReservationState,
+  dispatch: Dispatch<ReservationActions>
 }
 
-const ReservationList = ( {state} : TReservationListProps ) => {
+const ReservationList = ({ state, dispatch, reservationState }: TReservationListProps) => {
 
-
-  const typeName = useMemo( () => 
-      (type: TReservation['type']) => categories.map ( cat => cat.id === type ? cat.name : '' ),
-    [categories] );
+  const isReservationsEmpty = () => {
+    return reservationState.reservations.length === 0;
+  }
 
 
   return (
-    <div className="md:w-1/2 w-full p-8 flex flex-col bg-white">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Reservas recientes</h2>
-        { state.length === 0 
-        ? (<div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">No hay reservas recientes.</p>
-          </div>) 
-        : <div className="space-y-5">
-          {state.map((reservation : TReservation) => (
-            <div key={reservation.id} className="space-y-5">
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col gap-2 border border-gray-100 hover:shadow-2xl transition-shadow duration-200 max-w-md mx-auto space-y-5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-lg text-blue-700 truncate" title={reservation.responsable}>{reservation.responsable}</span>
-                <span className="text-sm text-gray-500 bg-blue-50 px-2 py-1 rounded-lg">{typeName(+reservation.type)}</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-1">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>{formatDate(reservation.datetime)}</span>
-                <span className="flex items-center gap-1"><svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4.13a4 4 0 10-8 0 4 4 0 008 0z" /></svg>{reservation.people} personas</span>
-                <span className="flex items-center gap-1"><svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a5 5 0 00-10 0v2M5 9h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" /></svg>{reservation.paymentMethod}</span>
-              </div>
-              {reservation.description 
-              ? <p className="text-gray-700 text-sm mt-1 line-clamp-3">{reservation.description}</p>
-              : (<p className="text-gray-400 text-sm mt-1 line-clamp-3">Sin descripción</p>)
-              }
-               
-            </div>
-
-
-            </div>
+    <div className="md:w-1/2 w-full p-8 flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-[300px] overflow-y-scroll sm">
+      {/* Encabezado fijo */}
+  <div className="sticky top-0 z-20  border-blue-100 pb-4 mb-6">
+        <h2 className="text-3xl font-bold text-blue-800 tracking-tight flex items-center gap-2">
+          <FaCalendarAlt className="text-blue-500" /> Reservas recientes
+        </h2>
+        <button
+          className="cursor-pointer bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-200 my-4 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isReservationsEmpty()}
+          onClick={() => dispatch({ type: 'delete-all-reservations', payload: { id: '' } })}
+        >
+          <FaRegTimesCircle className="mr-2 w-4 h-4" /> Eliminar todas las reservas
+        </button>
+      </div>
+      {state.length === 0 ? (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500 text-lg">No hay reservas recientes.</p>
         </div>
-          ))}
-          </div>}
-
-          
+      ) : (
+        <div className="grid gap-7 md:grid-cols-1 h-24">
+          <div className="flex flex-col gap-4 ">
+            {state.map((reservation: TReservation) => (
+              <div
+                key={reservation.id}
+                className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-200 border border-blue-100 p-6 flex flex-col gap-4 relative overflow-hidden"
+              >
+                {/* Etiqueta tipo de reserva */}
+                <span className="absolute top-4 right-4 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide">
+                  {formatString(reservation.type, categories)}
+                </span>
+                {/* Nombre responsable */}
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-blue-50 rounded-full p-2">
+                    <FaUser className="text-blue-500 text-lg" />
+                  </div>
+                  <span className="font-semibold text-lg text-gray-800 truncate" title={reservation.responsable}>
+                    {reservation.responsable}
+                  </span>
+                </div>
+                {/* Info principal */}
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <span className="flex items-center gap-2">
+                    <FaCalendarAlt className="text-blue-400" />
+                    {formatDate(reservation.datetime)}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <FaUsers className="text-blue-400" />
+                    {reservation.people} personas
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-blue-400" />
+                    {formatString(reservation.location, sedes)}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <FaRegCreditCard className="text-blue-400" />
+                    {formatString(reservation.paymentMethod, paymentMethods)}
+                  </span>
+                </div>
+                {/* Descripción */}
+                <div className="flex items-start gap-2 mt-2">
+                  <FaRegStickyNote className="text-blue-300 mt-1" />
+                  {reservation.description ? (
+                    <p className="text-gray-700 text-sm line-clamp-3">{reservation.description}</p>
+                  ) : (
+                    <p className="text-gray-400 text-sm">Sin descripción</p>
+                  )}
+                </div>
+                {/* Botones de acción */}
+                <div className="absolute flex gap-3 bottom-4 right-4">
+                  <button
+                    type="button"
+                    title="Editar"
+                    onClick={() => dispatch({ type: 'set-activeId', payload: { id: reservation.id } })}
+                    className="bg-blue-100 text-blue-600 rounded-full p-2 shadow-md hover:bg-blue-200 hover:text-blue-800 active:bg-blue-300 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    <HiPencilAlt className="w-5 h-5 cursor-pointer" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Eliminar"
+                    onClick={() => dispatch({ type: 'delete-reservation', payload: { id: reservation.id } })}
+                    className="bg-red-100 text-red-600 rounded-full p-2 shadow-md hover:bg-red-200 hover:text-red-800 active:bg-red-300 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-300"
+                  >
+                    <FaTrashAlt className="w-5 h-5 cursor-pointer" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-  )
-}
+      )}
+    </div>
+  );
+};
 
-export default ReservationList
+export default ReservationList;
